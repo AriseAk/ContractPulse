@@ -3,3 +3,81 @@ data
 ckpt_obligation_fast
 
 src/__pycache__/
+
+# ==========================================
+# Frontend (Next.js / Node)
+# ==========================================
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Vercel deployment
+.vercel/
+
+# Environment variables (Never commit secrets!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# Backend (Python / ML / Data)
+# ==========================================
+# Large archives and model weights
+*.zip
+*.tar.gz
+*.rar
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.pkl
+*.bin
+backend/model_3.zip
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environments
+venv/
+env/
+.env/
+.venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# ==========================================
+# OS & Editor Files
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
