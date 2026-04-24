@@ -192,8 +192,7 @@ def evaluate_pipeline(
                     qa_references[qid] = [a["text"] for a in qa["answers"]]
                 
                 # Extract category from question
-                cat_match = re.search(r'"([^"]+)"', qa["question"])
-                category = cat_match.group(1) if cat_match else "unknown"
+                category = qa.get("question_type", "financial")
                 
                 per_category_stats[category]["total"] += 1
                 if not qa["is_impossible"]:

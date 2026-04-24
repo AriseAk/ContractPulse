@@ -27,6 +27,8 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Dict, List, Optional, Tuple
 
+from matplotlib import text
+
 from src.stage4_qa_detection import DetectedClause
 
 logger = logging.getLogger(__name__)
@@ -164,10 +166,13 @@ METRIC_PATTERNS = {
         r"minimum\s+cash",
         r"cash\s+balance",
     ],
-    "insurance_coverage": [
-        r"insurance\s+coverage",
-        r"insurance\s+(?:amount|limit|requirement)",
-    ],
+"insurance_coverage": [
+    r"commercial\s+general\s+liability\s+insurance",
+    r"professional\s+liability\s+insurance",
+    r"liability\s+insurance",
+    r"insurance\s+coverage",
+    r"insurance\s+(?:amount|limit|requirement)",
+],
     "purchase_order": [r"purchase\s+order", r"minimum\s+(?:order|purchase)"],
     "unit_commitment": [r"(?:minimum\s+)?(?:number\s+of\s+)?units?"],
 }
@@ -190,15 +195,22 @@ def _rules_detect_metric(text: str) -> Optional[str]:
 
 
 def _spacy_detect_metric(text: str) -> Optional[str]:
-    """Noun-chunk heuristic: return the first chunk that looks financial.
-
-    Used only when rules return None.  We don't try to canonicalise to a known
-    metric name — we return the raw chunk so callers still get *something*.
-    """
+    """Noun-chunk heuristic with basic filtering to avoid useless chunks."""
     for chunk in _spacy_noun_chunks(text):
-        tokens = set(chunk.lower().split())
+        chunk_lower = chunk.lower().strip()
+        tokens = set(chunk_lower.split())
+
         if tokens & _METRIC_CHUNK_KEYWORDS:
-            return chunk.lower().replace(" ", "_")
+            # ❌ Reject useless references like "this ratio", "that ratio"
+            if chunk_lower.startswith(("this", "that", "such", "these", "those")):
+                continue
+
+            # ❌ Reject very short meaningless chunks
+            if len(tokens) <= 1:
+                continue
+
+            return chunk_lower.replace(" ", "_")
+
     return None
 
 
@@ -285,6 +297,13 @@ VALUE_PATTERNS = [
 
 
 def _rules_extract_value(text: str) -> Tuple[Optional[float], Optional[str]]:
+    # Reject deadline-like values (days)
+    if re.search(r'\b\d+\s+days?\b', text, re.IGNORECASE):
+        return None, None
+    if re.search(r'\d+\s+days?\s+(?:written\s+)?notice', text, re.IGNORECASE):
+        return None, None
+    if re.search(r'within\s+\d+\s+(?:business\s+)?days?', text, re.IGNORECASE):
+        return None, None
     for pattern, parser in VALUE_PATTERNS:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
@@ -453,6 +472,9 @@ def extract_from_clause(clause: DetectedClause) -> ExtractedObligation:
     # ── Value ────────────────────────────────────────────────────────────
     value, raw_value, value_src = extract_value(span)
     if value is None:
+        if value is not None:
+            if value < 100 and (metric is None or "ratio" not in metric):
+                value = None
         value, raw_value, value_src = extract_value(ctx)
         if value_src:
             value_src = f"ctx_{value_src}"
