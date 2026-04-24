@@ -436,7 +436,7 @@ CLAUSE_TYPE_MAP = {
 
 
 @app.route("/api/analyze", methods=["POST"])
-@require_auth # Optional: if you want to lock this to logged-in users
+# @require_auth  # Uncomment to lock behind auth — disabled for demo access
 def analyze_contract():
     text = extract_text_from_request()
     
@@ -463,8 +463,15 @@ def analyze_contract():
         print(raw_results)
         print("="*40 + "\n")
 
-        # 3. Temporarily disabled ALL strict filtering. 
-        # If the model finds *anything*, we will send it to the frontend.
+        # Get the cleaned text that the model actually operated on.
+        # This ensures source_text spans will match for highlighting.
+        try:
+            from src.stage1_ingestion import ingest
+            from src.stage2_cleaning import clean_text
+            cleaned_text = clean_text(ingest(text, "text"))
+        except Exception:
+            cleaned_text = text  # Fallback to raw text
+
         obligations = []
         for i, r in enumerate(raw_results):
             metric_name = r.get("metric_name", "Unknown Metric")
@@ -482,12 +489,17 @@ def analyze_contract():
                 "desc":       desc,
                 "confidence": round(score * 100, 1),
                 "risk":       risk,
+                "source_text": r.get("source_text", ""),
             })
 
         if not obligations:
             return jsonify({"error": "No strict numerical obligations found."}), 422
 
-        return jsonify({"obligations": obligations, "clause_count": len(obligations)})
+        return jsonify({
+            "obligations": obligations,
+            "clause_count": len(obligations),
+            "contract_text": cleaned_text,
+        })
 
     except Exception as e:
         print(f"[analyze] Pipeline error: {e}")
