@@ -4,6 +4,9 @@ ckpt_obligation_fast
 
 src/__pycache__/
 
+ckpt_obligation_fast.zip
+
+
 # ==========================================
 # Frontend (Next.js / Node)
 # ==========================================
