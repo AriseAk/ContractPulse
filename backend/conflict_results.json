@@ -1,0 +1,62 @@
+[
+  {
+    "clause_type": "ip_ownership",
+    "clause_a": "Licensee receives an exclusive, worldwide, perpetual license to use the software and any derivative works.",
+    "clause_b": "The granted license is non\u2011exclusive, limited to the United States, and expires 12 months after the effective date.",
+    "predicted_label": "contradiction",
+    "predicted_score": 0.9995,
+    "contradiction_score": 0.9995,
+    "all_scores": {
+      "contradiction": 0.9995,
+      "neutral": 0.0004,
+      "entailment": 0.0001
+    },
+    "token_length": 47,
+    "uncertain": false
+  },
+  {
+    "clause_type": "governing_law",
+    "clause_a": "The agreement is governed by the laws of the State of Delaware.",
+    "clause_b": "The agreement is governed by the laws of California.",
+    "predicted_label": "contradiction",
+    "predicted_score": 0.9995,
+    "contradiction_score": 0.9995,
+    "all_scores": {
+      "contradiction": 0.9995,
+      "neutral": 0.0004,
+      "entailment": 0.0001
+    },
+    "token_length": 26,
+    "uncertain": false
+  },
+  {
+    "clause_type": "warranty",
+    "clause_a": "Seller guarantees that all deliverables will be free of defects for twenty\u2011four months after Buyer\u2019s acceptance.",
+    "clause_b": "Seller disclaims all express and implied warranties, including merchantability and fitness for a particular purpose.",
+    "predicted_label": "contradiction",
+    "predicted_score": 0.9687,
+    "contradiction_score": 0.9687,
+    "all_scores": {
+      "contradiction": 0.9687,
+      "neutral": 0.0242,
+      "entailment": 0.0071
+    },
+    "token_length": 47,
+    "uncertain": false
+  },
+  {
+    "clause_type": "termination",
+    "clause_a": "Either party may end the agreement for convenience by giving the other party thirty days\u2019 written notice.",
+    "clause_b": "Either party may terminate only for cause, requiring a material breach that remains uncured for 60 days after written notice.",
+    "predicted_label": "contradiction",
+    "predicted_score": 0.7926,
+    "contradiction_score": 0.7926,
+    "all_scores": {
+      "contradiction": 0.7926,
+      "neutral": 0.1445,
+      "entailment": 0.0629
+    },
+    "token_length": 45,
+    "uncertain": false
+  }
+]
