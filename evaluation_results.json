@@ -1,0 +1,81 @@
+{
+  "pipeline_stats": {
+    "num_contracts_evaluated": 1,
+    "total_obligations_extracted": 14,
+    "obligations_with_metric_and_value": 13,
+    "per_contract": {
+      "SampleSoftwareLicenseAgreement_2024": 14
+    }
+  },
+  "category_stats": {
+    "unknown": {
+      "total": 30,
+      "detected": 28,
+      "extracted": 0
+    }
+  },
+  "sample_outputs": {
+    "SampleSoftwareLicenseAgreement_2024": [
+      {
+        "metric_name": "debt_to_equity_ratio",
+        "operator": "less_equal",
+        "threshold_value": 45.0,
+        "deadline": "within 45 days",
+        "consequence": "default",
+        "confidence_score": 0.4089,
+        "source_text": "The Borrower shall provide certified financial statements within 45 days of the end of each fiscal quarter.",
+        "question_type": "financial_limits",
+        "chunk_id": 0,
+        "contract_id": "SampleSoftwareLicenseAgreement_2024"
+      },
+      {
+        "metric_name": "debt_to_equity_ratio",
+        "operator": "less_equal",
+        "threshold_value": 2.5,
+        "deadline": "quarterly",
+        "consequence": "default",
+        "confidence_score": 0.4072,
+        "source_text": "The Borrower shall maintain at all times a Debt-to-Equity Ratio of not more than 2.5 to 1.0, tested quarterly. Failure to maintain this ratio shall constitute an event of default under this Agreement. The Borrower shall provide certified financial statements within 45 days of the end of each fiscal quarter.",
+        "question_type": "price_restrictions",
+        "chunk_id": 0,
+        "contract_id": "SampleSoftwareLicenseAgreement_2024"
+      },
+      {
+        "metric_name": "revenue",
+        "operator": "greater_equal",
+        "threshold_value": 5000000.0,
+        "deadline": "annually",
+        "consequence": "termination",
+        "confidence_score": 0.5379,
+        "source_text": "The Company shall maintain minimum annual gross revenue of at least $5,000,000 (Five Million Dollars) during each contract year.",
+        "question_type": "minimum_commitment",
+        "chunk_id": 0,
+        "contract_id": "SampleSoftwareLicenseAgreement_2024"
+      },
+      {
+        "metric_name": "revenue",
+        "operator": "greater_equal",
+        "threshold_value": 30.0,
+        "deadline": "30 days",
+        "consequence": "termination",
+        "confidence_score": 0.4943,
+        "source_text": "In the event the Company fails to meet this minimum revenue threshold, the counterparty may terminate this Agreement upon 30 days written notice.",
+        "question_type": "liquidated_damages",
+        "chunk_id": 0,
+        "contract_id": "SampleSoftwareLicenseAgreement_2024"
+      },
+      {
+        "metric_name": "this_agreement_commercial_general_liability_insurance",
+        "operator": "greater_than",
+        "threshold_value": 2000000.0,
+        "deadline": null,
+        "consequence": null,
+        "confidence_score": 0.5459,
+        "source_text": "The Vendor shall obtain and maintain throughout the term of this Agreement commercial general liability insurance with a minimum coverage amount of $2,000,000 per occurrence and $5,000,000 in the aggregate.",
+        "question_type": "minimum_commitment",
+        "chunk_id": 0,
+        "contract_id": "SampleSoftwareLicenseAgreement_2024"
+      }
+    ]
+  }
+}
