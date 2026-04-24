@@ -2,6 +2,7 @@ import os
 import pickle
 import pandas as pd
 from datetime import datetime
+import yfinance as yf
 
 # ═════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -13,26 +14,27 @@ FORECAST_PERIODS = 90
 # ═════════════════════════════════════════════════════════════════════════════
 # 1. CORE PIPELINE FUNCTIONS (Required for Frontend/Backend to use the model)
 # ═════════════════════════════════════════════════════════════════════════════
-def load_ticker_data(ticker: str, data_dir: str) -> pd.DataFrame:
-    """Load raw data."""
-    candidates = [
-        os.path.join(data_dir, f'{ticker}.us.txt'),
-        os.path.join(data_dir, f'{ticker}.txt'),
-        os.path.join(data_dir, f'{ticker.upper()}.us.txt'),
-    ]
-    path = next((c for c in candidates if os.path.isfile(c)), None)
-    if not path:
-        raise FileNotFoundError(f"Data for {ticker} not found.")
+def load_ticker_data(ticker, data_dir=None):
+    """
+    Dynamically fetches historical data from Yahoo Finance.
+    Bypasses local CSV files completely.
+    """
+    print(f"[Data] Fetching live market data for {ticker.upper()}...")
+    
+    # Download 2 years of daily data
+    stock = yf.Ticker(ticker.upper())
+    df = stock.history(period="2y")
+    
+    if df.empty:
+        raise ValueError(f"Data for {ticker} not found on Yahoo Finance.")
         
-    df = pd.read_csv(path, header=0, names=['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'OpenInt'], parse_dates=['Date'])
-    df = df[['Date', 'Close', 'Volume']].copy()
-    df['Date'] = pd.to_datetime(df['Date'])
-    df.set_index('Date', inplace=True)
-    df.sort_index(inplace=True)
-    df = df[~df.index.duplicated(keep='first')]
-    df = df[df['Close'] > 0]
-    df.ffill(inplace=True)
-    df.dropna(inplace=True)
+    # Reset index so 'Date' becomes a column
+    df = df.reset_index()
+    
+    # Ensure the Date column is localized properly for Prophet
+    if df['Date'].dt.tz is not None:
+        df['Date'] = df['Date'].dt.tz_localize(None)
+        
     return df
 
 def build_risk_score(df: pd.DataFrame) -> pd.DataFrame:

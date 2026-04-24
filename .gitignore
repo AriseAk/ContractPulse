@@ -84,3 +84,5 @@ Desktop.ini
 .idea/
 *.swp
 *.swo
+
+/backend/model_3

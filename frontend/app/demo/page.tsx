@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import { Upload, FileText, AlertTriangle, ArrowRight, RefreshCw } from "lucide-react";
+
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const cls = {
   page: "min-h-screen bg-[#1a1008] text-[#f9f5ef] font-['Inter',sans-serif] selection:bg-[#C0B298] selection:text-[#1a1008]",
@@ -10,18 +12,14 @@ const cls = {
   label: "text-[10px] tracking-[0.4em] text-[#C0B298] uppercase font-bold",
 };
 
-const SAMPLE_CONTRACT = {
-  name: "Acme Corp — Term Loan Agreement",
-  lender: "SBI Capital",
-  amount: "₹5 Cr",
-  date: "Jan 15, 2024",
-  obligations: [
-    { id: "C1", clause: "Section 8.2", type: "Financial Covenant", desc: "Debt/EBITDA ratio must remain below 3.5x at all times.", metric: "Debt/EBITDA", current: "2.9x", limit: "3.5x", risk: 58 },
-    { id: "C2", clause: "Section 8.4", type: "Financial Covenant", desc: "Minimum cash balance of ₹50L must be maintained at month-end.", metric: "Cash Balance", current: "₹61L", limit: "₹50L", risk: 32 },
-    { id: "C3", clause: "Section 9.1", type: "Financial Covenant", desc: "Interest Coverage Ratio (ICR) must exceed 1.5x quarterly.", metric: "ICR", current: "1.62x", limit: "1.5x", risk: 74 },
-    { id: "C4", clause: "Section 11.3", type: "Reporting", desc: "Quarterly management accounts due within 45 days of quarter end.", metric: "Reporting", current: "On track", limit: "45 days", risk: 10 },
-  ],
-};
+interface Obligation {
+  id: string;
+  clause: string;
+  type: string;
+  desc: string;
+  confidence: number;
+  risk: number;
+}
 
 function RiskBadge({ risk }: { risk: number }) {
   const color = risk >= 70 ? "text-red-400 bg-red-400/10 border-red-400/30"
@@ -41,17 +39,84 @@ function RiskBar({ value }: { value: number }) {
 }
 
 export default function DemoPage() {
-  const [uploaded, setUploaded] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analyzed, setAnalyzed] = useState(false);
-  const [revenue, setRevenue] = useState(0);
-  const [cost, setCost] = useState(0);
+  const [analyzing, setAnalyzing]   = useState(false);
+  const [analyzed, setAnalyzed]     = useState(false);
+  const [error, setError]           = useState<string | null>(null);
+  const [obligations, setObligations] = useState<Obligation[]>([]);
+  const [contractName, setContractName] = useState("");
+
+  // Scenario sliders state
+  const [revenue, setRevenue]   = useState(0);
+  const [cost, setCost]         = useState(0);
   const [interest, setInterest] = useState(0);
 
-  const handleSample = () => {
+  const sample_text = `TERM LOAN AGREEMENT — SBI CAPITAL MARKETS
+
+Section 8.2 — Financial Covenant: Debt/EBITDA Ratio
+The Borrower shall maintain a Debt to EBITDA ratio of no greater than 3.5x as measured at the end of each fiscal quarter.
+
+Section 8.4 — Financial Covenant: Minimum Cash Balance
+The Borrower shall maintain a minimum cash balance of INR 50 Lakhs in its primary operating account at the end of each calendar month.
+
+Section 9.1 — Financial Covenant: Interest Coverage Ratio
+The Borrower shall ensure that the Interest Coverage Ratio (ICR) exceeds 1.5x as measured on a trailing twelve-month basis at each quarter end.
+
+Section 11.3 — Reporting Obligation
+The Borrower shall deliver to the Lender quarterly management accounts within 45 days of the end of each fiscal quarter, certified by the Chief Financial Officer.
+
+Section 12.1 — Restriction Covenant: Dividends
+The Borrower shall not declare or pay any dividends or make any distributions to its shareholders without the prior written consent of the Lender while any amounts remain outstanding.`;
+
+  const runAnalysis = async (text: string, name: string) => {
     setAnalyzing(true);
-    setTimeout(() => { setAnalyzing(false); setUploaded(true); setAnalyzed(true); }, 1800);
+    setError(null);
+    setContractName(name);
+    try {
+      const res = await fetch(`${BACKEND}/api/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Analysis failed");
+      setObligations(data.obligations);
+      setAnalyzed(true);
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Is the Flask backend running?");
+    } finally {
+      setAnalyzing(false);
+    }
   };
+
+  const handleSample = () => runAnalysis(sample_text, "Acme Corp — Term Loan Agreement (Sample)");
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAnalyzing(true);
+    setError(null);
+    setContractName(file.name);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${BACKEND}/api/analyze`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Analysis failed");
+      setObligations(data.obligations);
+      setAnalyzed(true);
+    } catch (err: any) {
+      setError(err.message || "Upload failed");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const reset = () => { setAnalyzed(false); setObligations([]); setRevenue(0); setCost(0); setInterest(0); setError(null); };
 
   const adjustedRisk = (base: number) => {
     const adj = base + revenue * 0.4 + cost * 0.25 + interest * 0.3;
@@ -59,7 +124,7 @@ export default function DemoPage() {
   };
 
   const overallRisk = analyzed
-    ? Math.round(SAMPLE_CONTRACT.obligations.reduce((a, o) => a + adjustedRisk(o.risk), 0) / SAMPLE_CONTRACT.obligations.length)
+    ? Math.round(obligations.reduce((a, o) => a + adjustedRisk(o.risk), 0) / (obligations.length || 1))
     : 0;
 
   const timeRange = analyzed
@@ -70,8 +135,20 @@ export default function DemoPage() {
     revenue > 0 && `Revenue decline of ${revenue}% increases Debt/EBITDA pressure`,
     cost > 0 && `Cost increase of ${cost}% compresses ICR margin`,
     interest > 0 && `Rate rise of ${interest}% directly reduces ICR`,
-    "ICR at 1.62x vs 1.5x floor — only 8% margin",
+    "ICR is the highest-risk covenant — minimal buffer detected",
   ].filter(Boolean) as string[] : [];
+
+  // Pass live data to the Report page using localStorage
+  useEffect(() => {
+    if (analyzed && obligations.length > 0) {
+      localStorage.setItem("cPulse_report", JSON.stringify({
+        contractName,
+        obligations: obligations.map(o => ({ ...o, adjustedRisk: adjustedRisk(o.risk) })),
+        overallRisk,
+        timeRange,
+      }));
+    }
+  }, [analyzed, obligations, revenue, cost, interest, contractName, overallRisk, timeRange]);
 
   return (
     <div className={cls.page}>
@@ -88,6 +165,13 @@ export default function DemoPage() {
             </h1>
             <p className="text-[#f9f5ef]/50 text-base">Upload a contract or use a sample. Adjust scenarios. See real-time breach risk.</p>
           </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl px-6 py-4 flex items-center gap-3 text-sm text-red-400">
+              <AlertTriangle size={16} /> {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-8 items-start">
             {/* Left: Upload + Obligations */}
@@ -106,11 +190,11 @@ export default function DemoPage() {
                       disabled={analyzing}
                       className="bg-[#C0B298] text-[#1a1008] px-7 py-3 rounded-full text-sm font-black uppercase tracking-widest hover:bg-[#f9f5ef] transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
-                      {analyzing ? <><RefreshCw size={14} className="animate-spin" /> Processing…</> : "Use Sample Contract"}
+                      {analyzing ? <><RefreshCw size={14} className="animate-spin" /> Analyzing…</> : "Use Sample Contract"}
                     </button>
                     <label className="border border-white/20 text-[#f9f5ef]/60 px-7 py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:border-white/40 transition-colors cursor-pointer">
                       Upload PDF
-                      <input type="file" accept=".pdf,.doc,.docx" className="hidden" />
+                      <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} disabled={analyzing} />
                     </label>
                   </div>
                 </div>
@@ -121,12 +205,11 @@ export default function DemoPage() {
                       <FileText size={18} className="text-[#C0B298]" />
                     </div>
                     <div>
-                      <p className="font-bold text-sm">{SAMPLE_CONTRACT.name}</p>
-                      <p className="text-xs text-[#f9f5ef]/40">{SAMPLE_CONTRACT.lender} · {SAMPLE_CONTRACT.amount} · {SAMPLE_CONTRACT.date}</p>
+                      <p className="font-bold text-sm">{contractName}</p>
+                      <p className="text-xs text-[#f9f5ef]/40">{obligations.length} obligations extracted · AI analyzed</p>
                     </div>
                   </div>
-                  <button onClick={() => { setAnalyzed(false); setUploaded(false); setRevenue(0); setCost(0); setInterest(0); }}
-                    className="text-[10px] font-bold text-[#f9f5ef]/30 hover:text-[#C0B298] tracking-widest uppercase transition-colors">
+                  <button onClick={reset} className="text-[10px] font-bold text-[#f9f5ef]/30 hover:text-[#C0B298] tracking-widest uppercase transition-colors">
                     Reset
                   </button>
                 </div>
@@ -136,10 +219,10 @@ export default function DemoPage() {
               {analyzed && (
                 <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                   <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                    <h3 className={`${cls.clash} text-sm`}>Extracted Obligations ({SAMPLE_CONTRACT.obligations.length})</h3>
-                    <span className="text-[10px] text-[#C0B298] tracking-widest uppercase font-bold">AI Extracted</span>
+                    <h3 className={`${cls.clash} text-sm`}>Extracted Obligations ({obligations.length})</h3>
+                    <span className="text-[10px] text-[#C0B298] tracking-widest uppercase font-bold">AI Analyzed · Live</span>
                   </div>
-                  {SAMPLE_CONTRACT.obligations.map((o) => {
+                  {obligations.map((o) => {
                     const adj = adjustedRisk(o.risk);
                     return (
                       <div key={o.id} className="px-6 py-5 border-b border-white/5 last:border-0">
@@ -150,11 +233,10 @@ export default function DemoPage() {
                           </div>
                           <RiskBadge risk={adj} />
                         </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-xs text-[#f9f5ef]/40">Current: <span className="text-[#f9f5ef]/80 font-medium">{o.current}</span></span>
-                          <span className="text-xs text-[#f9f5ef]/40">Limit: <span className="text-[#f9f5ef]/80 font-medium">{o.limit}</span></span>
+                        <div className="flex items-center gap-4 mb-2">
+                          <span className="text-xs text-[#f9f5ef]/40">Confidence: <span className="text-[#C0B298] font-medium">{o.confidence}%</span></span>
                         </div>
-                        <div className="mt-3">
+                        <div className="mt-2">
                           <RiskBar value={adj} />
                         </div>
                       </div>
@@ -196,7 +278,6 @@ export default function DemoPage() {
               <div className={`border rounded-2xl p-8 transition-all duration-500 ${analyzed ? "bg-[#C0B298]/8 border-[#C0B298]/20" : "bg-white/5 border-white/10 opacity-40 pointer-events-none"}`}>
                 <h3 className={`${cls.clash} text-sm mb-6`}>Risk Output</h3>
 
-                {/* Overall Score */}
                 <div className="flex items-center justify-between mb-8 pb-8 border-b border-white/5">
                   <div>
                     <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-1">Overall Breach Risk</p>
@@ -210,7 +291,6 @@ export default function DemoPage() {
                   </div>
                 </div>
 
-                {/* Key Drivers */}
                 {drivers.length > 0 && (
                   <div className="mb-6">
                     <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-3 flex items-center gap-2">
@@ -226,7 +306,6 @@ export default function DemoPage() {
                   </div>
                 )}
 
-                {/* Recommendations */}
                 {analyzed && (
                   <div>
                     <p className="text-[10px] tracking-widest uppercase font-bold text-[#C0B298] mb-3">Recommended Actions</p>
@@ -244,9 +323,7 @@ export default function DemoPage() {
                   </div>
                 )}
 
-                {!analyzed && (
-                  <p className="text-center text-sm text-[#f9f5ef]/30 py-8">Upload or use a sample contract to see output.</p>
-                )}
+                {!analyzed && <p className="text-center text-sm text-[#f9f5ef]/30 py-8">Upload or use a sample contract to see output.</p>}
               </div>
 
               {analyzed && (

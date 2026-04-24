@@ -3,66 +3,22 @@ import Navbar from "../components/Navbar";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle, ArrowRight, Download } from "lucide-react";
 
+import { useEffect, useState } from "react";
+
 const cls = {
   page: "min-h-screen bg-[#f9f5ef] text-[#1a1008] font-['Inter',sans-serif] selection:bg-[#C0B298] selection:text-[#1a1008]",
   clash: "font-['Space_Grotesk',sans-serif] font-bold tracking-tighter uppercase",
   label: "text-[10px] tracking-[0.4em] text-[#6b5744] uppercase font-bold",
 };
 
-const covenants = [
-  {
-    id: "C1",
-    description: "Debt/EBITDA ≤ 3.5x",
-    current: "2.9x",
-    limit: "3.5x",
-    margin: "0.6x headroom",
-    riskPct: 74,
-    status: "warning",
-    trend: "↑ worsening",
-    ttb: "36–52 days",
-    drivers: ["Revenue declined 8% QoQ", "EBITDA margin compressed by rising input costs", "Short-term debt refinanced at higher principal"],
-    actions: ["Pursue cost reduction of ₹30–40L/quarter", "Consider early repayment of higher-interest facilities", "Pre-emptively discuss covenant waiver with SBI"],
-  },
-  {
-    id: "C2",
-    description: "Minimum Cash Balance ≥ ₹50L",
-    current: "₹61L",
-    limit: "₹50L",
-    margin: "₹11L headroom",
-    riskPct: 51,
-    status: "warning",
-    trend: "↓ stable",
-    ttb: "58–74 days",
-    drivers: ["Cash burn elevated due to capex spend", "Receivables collection cycle extended by 12 days"],
-    actions: ["Accelerate receivables collection", "Defer discretionary capex by one quarter"],
-  },
-  {
-    id: "C3",
-    description: "Interest Coverage Ratio (ICR) ≥ 1.5x",
-    current: "1.62x",
-    limit: "1.5x",
-    margin: "0.12x headroom",
-    riskPct: 88,
-    status: "high",
-    trend: "↑ deteriorating fast",
-    ttb: "11–18 days",
-    drivers: ["Rising interest rates increasing debt servicing cost", "Declining operating profit margin", "New facility drawdown increasing interest burden"],
-    actions: ["Immediately reduce interest-bearing debt", "Raise equity or mezzanine capital to improve ratio", "Alert CFO and prepare lender communication for potential breach"],
-  },
-  {
-    id: "C4",
-    description: "Quarterly reporting within 45 days of quarter end",
-    current: "On track",
-    limit: "45 days",
-    margin: "14 days remaining",
-    riskPct: 10,
-    status: "safe",
-    trend: "— on track",
-    ttb: "N/A",
-    drivers: [],
-    actions: ["File accounts by Q3 deadline", "No action required"],
-  },
-];
+interface Obligation {
+  id: string;
+  clause: string;
+  type: string;
+  desc: string;
+  confidence: number;
+  adjustedRisk: number;
+}
 
 function RiskBar({ value, status }: { value: number; status: string }) {
   const color = status === "high" ? "bg-red-500" : status === "warning" ? "bg-amber-500" : "bg-emerald-500";
@@ -75,9 +31,56 @@ function RiskBar({ value, status }: { value: number; status: string }) {
 }
 
 export default function ReportPage() {
+  const [data, setData] = useState<{
+    contractName: string;
+    obligations: Obligation[];
+    overallRisk: number;
+    timeRange: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("cPulse_report");
+    if (saved) {
+      try {
+        setData(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  if (!data) return (
+    <div className={cls.page + " pt-40 md:px-12 px-6 flex flex-col items-center"}>
+      <Navbar />
+      <h2 className={`${cls.clash} text-2xl text-center mb-4`}>No Report Data Available</h2>
+      <p className="text-[#1a1008]/50 mb-8">Please analyze a contract on the Demo page first.</p>
+      <Link href="/demo" className="bg-[#1a1008] text-[#f9f5ef] px-6 py-3 rounded-full text-sm font-black uppercase tracking-widest hover:bg-[#C0B298] hover:text-[#1a1008] transition-colors">
+        Go to Demo
+      </Link>
+    </div>
+  );
+
+  const covenants = data.obligations.map(o => ({
+  id: o.id,
+  description: o.clause + " - " + o.type,
+  // Using the actual model description as the limit/requirement
+  limit: o.desc, 
+  // Make the 'current' label dynamic based on the risk level
+  current: o.adjustedRisk >= 70 ? "At Risk" : o.adjustedRisk >= 40 ? "Approaching Limit" : "Compliant",
+  margin: `AI Confidence: ${o.confidence}%`,
+  riskPct: o.adjustedRisk,
+  status: o.adjustedRisk >= 70 ? "high" : o.adjustedRisk >= 40 ? "warning" : "safe",
+  trend: o.adjustedRisk >= 70 ? "↑ worsening" : o.adjustedRisk >= 40 ? "— stable" : "↓ safe",
+  actions: o.adjustedRisk >= 70 
+    ? ["Requires immediate legal review", "Prepare mitigation strategy for potential breach", "Assess exposure in related facilities"]
+    : o.adjustedRisk >= 40
+    ? ["Monitor closely in next reporting cycle", "Clarify exact parameters with counsel"]
+    : ["No immediate action needed", "Standard compliance check required"],
+  // Pass the actual obligation text as the context driver
+  drivers: ["Extracted Requirement: " + (o.desc.length > 80 ? o.desc.substring(0, 80) + "..." : o.desc)]
+}));
+
   const highRisk    = covenants.filter(c => c.status === "high").length;
   const warningRisk = covenants.filter(c => c.status === "warning").length;
-  const avgRisk     = Math.round(covenants.reduce((a, c) => a + c.riskPct, 0) / covenants.length);
+  const avgRisk     = data.overallRisk;
 
   return (
     <div className={cls.page}>
@@ -91,8 +94,8 @@ export default function ReportPage() {
           <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-6 pb-12 border-b-2 border-[#1a1008]/10">
             <div>
               <p className={cls.label}>Covenant Risk Report · Confidential</p>
-              <h1 className={`${cls.clash} text-[clamp(2rem,5vw,4rem)] leading-tight mt-3 mb-2`}>ACME CORP —<br />SBI TERM LOAN</h1>
-              <p className="text-sm text-[#6b5744]">Generated by ContractPulse · April 24, 2026 · As of: Q1 FY26</p>
+              <h1 className={`${cls.clash} text-[clamp(2rem,5vw,4rem)] leading-tight mt-3 mb-2`}>{data.contractName.toUpperCase() || "CONTRACT ANALYSIS"}</h1>
+              <p className="text-sm text-[#6b5744]">Generated by ContractPulse · Live AI Analysis</p>
             </div>
             <div className="flex gap-3 flex-wrap print:hidden">
               <button onClick={() => window.print()} className="flex items-center gap-2 border-2 border-[#1a1008] text-[#1a1008] px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-[#1a1008] hover:text-[#f9f5ef] transition-colors">
@@ -110,7 +113,7 @@ export default function ReportPage() {
               { label: "Overall Risk Score", val: `${avgRisk}%`,         accent: avgRisk >= 60 },
               { label: "High Risk Covenants", val: `${highRisk}`,        accent: highRisk > 0 },
               { label: "Warning Covenants",   val: `${warningRisk}` },
-              { label: "Time-to-Breach (Worst Case)", val: "11–18 days", accent: true },
+              { label: "Time-to-Breach", val: data.timeRange, accent: true },
             ].map((s) => (
               <div key={s.label} className={`p-6 rounded-2xl border-2 ${s.accent ? "border-red-400 bg-red-50" : "border-[#1a1008]/10 bg-white"}`}>
                 <p className="text-[10px] tracking-widest uppercase font-bold text-[#6b5744] mb-2">{s.label}</p>
@@ -121,14 +124,17 @@ export default function ReportPage() {
 
           {/* Executive Summary */}
           <div className="bg-white border-2 border-[#1a1008]/10 rounded-2xl p-8 mb-8">
-            <h2 className={`${cls.clash} text-xl mb-4`}>Executive Summary</h2>
-            <p className="text-sm leading-relaxed text-[#1a1008]/70 mb-4">
-              As of Q1 FY26, Acme Corp's obligation profile under the SBI Term Loan Agreement presents <strong className="text-red-600">elevated breach risk</strong> on the Interest Coverage Ratio (ICR) covenant. The ICR stands at 1.62x against a 1.5x floor — a margin of only 0.12x. At the current trajectory (declining operating margins + rising interest expense), breach is projected within <strong className="text-red-600">11–18 days</strong>.
-            </p>
-            <p className="text-sm leading-relaxed text-[#1a1008]/70">
-              The Debt/EBITDA covenant is under watch (0.6x headroom, deteriorating trend). Minimum cash balance is within range but narrowing. Reporting covenant is on track.
-            </p>
-          </div>
+  <h2 className={`${cls.clash} text-xl mb-4`}>Executive Summary</h2>
+  <p className="text-sm leading-relaxed text-[#1a1008]/70 mb-4">
+    The obligation profile for <strong className="text-[#1a1008]">{data.contractName || "the analyzed contract"}</strong> presents an overall risk score of <strong className={data.overallRisk >= 70 ? "text-red-600" : data.overallRisk >= 40 ? "text-amber-600" : "text-emerald-600"}>{data.overallRisk}%</strong>. 
+    {data.overallRisk >= 70 ? " This indicates elevated exposure requiring immediate review." : data.overallRisk >= 40 ? " This indicates moderate exposure; monitoring is advised." : " This indicates a safe compliance margin."}
+  </p>
+  {data.timeRange !== "—" && (
+    <p className="text-sm leading-relaxed text-[#1a1008]/70">
+      Based on the scenario parameters set during analysis, the estimated time-to-breach window is <strong className="text-[#1a1008]">{data.timeRange}</strong>.
+    </p>
+  )}
+</div>
 
           {/* Covenant deep-dives */}
           <h2 className={`${cls.clash} text-2xl mb-6`}>Covenant-Level Analysis</h2>
