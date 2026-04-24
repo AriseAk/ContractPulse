@@ -439,58 +439,46 @@ CLAUSE_TYPE_MAP = {
 @require_auth # Optional: if you want to lock this to logged-in users
 def analyze_contract():
     text = extract_text_from_request()
+    
+    print("\n" + "="*40)
+    print("--- 1. INCOMING TEXT TO AI ---")
+    print(text[:400].strip() if text else "WARNING: TEXT IS EMPTY!")
+    print("="*40 + "\n")
+
     if not text.strip():
         return jsonify({"error": "No contract text provided"}), 400
 
     pipeline = get_model("obligation")
     
     try:
-        # 1. Run the structured pipeline
         raw_results = pipeline.process(
             source=text,
             source_type="text",
             contract_id="api_upload",
             debug=True
         )
-        print("\n--- RAW PIPELINE RESULTS ---")
+
+        print("\n" + "="*40)
+        print("--- 2. RAW PIPELINE OUTPUT ---")
         print(raw_results)
-        print("----------------------------\n")
+        print("="*40 + "\n")
 
-        # 2. Clean and deduplicate (using your exact logic)
-        seen = {}
-        for r in raw_results:
-            metric = r.get("metric_name")
-            value = r.get("threshold_value")
-            
-            if not metric or not value:
-                continue # Skip if it couldn't find a hard number or metric
-                
-            key = (metric, value)
-            if key not in seen or conf > seen[key].get("confidence_score", 0):
-                seen[key] = r
-
-        # 3. Map to the frontend Obligation interface
+        # 3. Temporarily disabled ALL strict filtering. 
+        # If the model finds *anything*, we will send it to the frontend.
         obligations = []
-        for i, r in enumerate(seen.values()):
-            # Fallbacks in case the pipeline misses a field
+        for i, r in enumerate(raw_results):
             metric_name = r.get("metric_name", "Unknown Metric")
             op = r.get("operator", "must maintain")
-            val = r.get("threshold_value", "")
+            val = r.get("threshold_value", "a specific value")
             
-            # Construct a clean description for the UI
             desc = f"The entity {op} a {metric_name} of {val}."
-            if r.get("deadline"):
-                desc += f" Timeline: {r.get('deadline')}."
-            if r.get("consequence"):
-                desc += f" Penalty: {r.get('consequence')}."
-
-            score = r.get("confidence_score", 0)
-            risk = max(5, min(95, round((1 - score) * 80 + 10))) # Your existing risk heuristic
+            score = r.get("confidence_score", 0.5)
+            risk = max(5, min(95, round((1 - score) * 80 + 10)))
 
             obligations.append({
                 "id":         f"C{i+1}",
-                "clause":     metric_name.replace("_", " ").title(),
-                "type":       "Financial Covenant", # You could map this dynamically based on the metric
+                "clause":     str(metric_name).replace("_", " ").title()[:30],
+                "type":       "Financial Covenant",
                 "desc":       desc,
                 "confidence": round(score * 100, 1),
                 "risk":       risk,
