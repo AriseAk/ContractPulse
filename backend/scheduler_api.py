@@ -21,11 +21,9 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
 
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask import Blueprint, jsonify, request
 
-app = Flask(__name__)
-CORS(app)  # allow Next.js frontend to call
+scheduler_bp = Blueprint("scheduler", __name__)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -270,7 +268,34 @@ class TaskScheduler:
         if breach.conflict_with and self._room_scheduler:
             meeting_slot = self._book_conflict_meeting(task, breach)
 
+        # Send automated email alert for CRITICAL and HIGH severity
+        self._alert_team_via_email(task)
+
         return task, meeting_slot
+
+    def _alert_team_via_email(self, task: Task) -> None:
+        if task.severity not in [Severity.CRITICAL, Severity.HIGH]:
+            return
+        
+        email_body = f"""
+        [URGENT] Covenant Breach Alert: {task.title}
+        
+        A {task.severity.name} severity breach has been processed by the ContractPulse Response Engine.
+        
+        Task ID: {task.task_id}
+        Assigned To: {[d.value for d in task.assigned_to]}
+        Due By: {task.due_by.strftime('%Y-%m-%d %H:%M:%S')}
+        
+        Details:
+        {task.description}
+        
+        Please take immediate action.
+        """
+        print("\n" + "="*60)
+        print("📧 AUTOMATED EMAIL ALERT DISPATCHED")
+        print("="*60)
+        print(email_body)
+        print("="*60 + "\n")
 
     def process_batch(self, breaches: list[BreachedObligation]) -> tuple[list[Task], list[MeetingSlot]]:
         results = [self.process_breach(b) for b in breaches]
@@ -377,12 +402,12 @@ def _breach_from_dict(d: dict) -> BreachedObligation:
 # ROUTES
 # ─────────────────────────────────────────────────────────────
 
-@app.get("/api/health")
+@scheduler_bp.get("/api/health")
 def health():
     return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()})
 
 
-@app.post("/api/process_breach")
+@scheduler_bp.post("/api/process_breach")
 def process_breach():
     """
     Body (JSON):
@@ -412,7 +437,7 @@ def process_breach():
     }), 201
 
 
-@app.post("/api/process_batch")
+@scheduler_bp.post("/api/process_batch")
 def process_batch():
     """
     Body: { "breaches": [ <breach>, ... ] }
@@ -437,7 +462,7 @@ def process_batch():
     }), 201
 
 
-@app.get("/api/tasks")
+@scheduler_bp.get("/api/tasks")
 def get_tasks():
     """
     Query params:
@@ -461,7 +486,7 @@ def get_tasks():
     return jsonify({"tasks": [t.to_dict() for t in tasks], "count": len(tasks)})
 
 
-@app.get("/api/meetings")
+@scheduler_bp.get("/api/meetings")
 def get_meetings():
     meetings = scheduler._task_scheduler_meetings() if hasattr(scheduler, "_task_scheduler_meetings") else scheduler._auto_meetings
     # Also include room scheduler bookings
@@ -472,12 +497,12 @@ def get_meetings():
     return jsonify({"meetings": [m.to_dict() for m in combined], "count": len(combined)})
 
 
-@app.get("/api/departments")
+@scheduler_bp.get("/api/departments")
 def get_departments():
     return jsonify({"summary": scheduler.department_summary()})
 
 
-@app.post("/api/reset")
+@scheduler_bp.post("/api/reset")
 def reset():
     global scheduler
     scheduler = _build_scheduler()
@@ -489,15 +514,10 @@ def reset():
 # ─────────────────────────────────────────────────────────────
 
 # Override get_meetings to use _auto_meetings list on TaskScheduler
-@app.get("/api/meetings")
+@scheduler_bp.get("/api/meetings")
 def get_meetings_v2():
     auto = scheduler._auto_meetings or []
     return jsonify({"meetings": [m.to_dict() for m in auto], "count": len(auto)})
 
 
-if __name__ == "__main__":
-    print("\n" + "═" * 50)
-    print("  ContractPulse Scheduler API")
-    print("  Running on http://localhost:5000")
-    print("═" * 50 + "\n")
-    app.run(debug=True, port=5000)
+# Scheduler Blueprint configuration complete.

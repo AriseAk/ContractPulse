@@ -16,24 +16,54 @@ FORECAST_PERIODS = 90
 # ═════════════════════════════════════════════════════════════════════════════
 def load_ticker_data(ticker, data_dir=None):
     """
-    Dynamically fetches historical data from Yahoo Finance.
-    Bypasses local CSV files completely.
+    Load a single ticker from the local dataset.
+    File format: Date,Open,High,Low,Close,Volume,OpenInt
+    Returns a DataFrame with DatetimeIndex, columns [Close, Volume].
     """
-    print(f"[Data] Fetching live market data for {ticker.upper()}...")
+    if data_dir is None:
+        data_dir = DATA_DIR
+
+    print(f"[Data] Fetching local dataset data for {ticker.upper()}...")
     
-    # Download 2 years of daily data
-    stock = yf.Ticker(ticker.upper())
-    df = stock.history(period="2y")
+    candidates = [
+        os.path.join(data_dir, f'{ticker}.us.txt'),
+        os.path.join(data_dir, f'{ticker}.txt'),
+        os.path.join(data_dir, f'{ticker.upper()}.us.txt'),
+        os.path.join(data_dir, f'{ticker.upper()}.txt'),
+    ]
+
+    path = None
+    for c in candidates:
+        if os.path.isfile(c):
+            path = c
+            break
+
+    if path is None:
+        raise ValueError(f"Data file for {ticker} not found in {data_dir}. Please provide the dataset!")
+
+    df = pd.read_csv(
+        path,
+        header=0,
+        names=['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'OpenInt'],
+        parse_dates=['Date'],
+    )
+    df = df[['Date', 'Close', 'Volume']].copy()
+    df['Date'] = pd.to_datetime(df['Date'])
+    df.set_index('Date', inplace=True)
+    df.sort_index(inplace=True)
+
+    # Drop duplicates on date index
+    df = df[~df.index.duplicated(keep='first')]
+
+    # Only keep rows where Close > 0
+    df = df[df['Close'] > 0]
     
-    if df.empty:
-        raise ValueError(f"Data for {ticker} not found on Yahoo Finance.")
-        
-    # Reset index so 'Date' becomes a column
-    df = df.reset_index()
-    
-    # Ensure the Date column is localized properly for Prophet
-    if df['Date'].dt.tz is not None:
-        df['Date'] = df['Date'].dt.tz_localize(None)
+    # We keep the DatetimeIndex so we can align with Prophet forecasts
+    # Normalize the index to remove time components
+    if df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
+    df.index = df.index.normalize()
+    df.index.name = 'Date'
         
     return df
 

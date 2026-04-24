@@ -24,6 +24,7 @@ from pymongo import MongoClient
 import certifi
 from werkzeug.security import check_password_hash, generate_password_hash
 from src.pipeline import ObligationPipeline
+from scheduler_api import scheduler_bp, scheduler, BreachedObligation, ObligationType
 
 # ─── Load env ─────────────────────────────────────────────────────────────────
 load_dotenv()
@@ -63,6 +64,15 @@ def now():
 
 # ─── App setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(16)
+CORS(
+    app,
+    origins              = [FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000"],
+    supports_credentials = True,
+    allow_headers        = ["Content-Type", "Authorization"],
+    methods              = ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+)
+app.register_blueprint(scheduler_bp)
 app.config.update(
     SECRET_KEY              = SECRET_KEY,
     SESSION_TYPE            = "filesystem",
@@ -603,6 +613,25 @@ def risk_forecast():
             days_to_breach  = max((rows.iloc[0]['ds'] - pd.Timestamp(last_date)).days, 0)
             break
 
+    # Auto-trigger scheduler if breach is detected
+    if breach_detected and breach_date:
+        try:
+            ob_type = ObligationType.LIQUIDITY_RATIO if ticker.upper() == 'CHK' else ObligationType.REVENUE
+            breach_obj = BreachedObligation(
+                contract_id=f"AUTO-{ticker.upper()}",
+                obligation_type=ob_type,
+                metric_name="Financial Risk Score",
+                threshold_value=round(float(threshold), 2),
+                current_value=round(float(current_risk_norm), 2),
+                predicted_value=None,
+                deadline=breach_date,
+                consequence="Covenant Violation Predicted by Prophet Model",
+                conflict_with=None
+            )
+            scheduler.process_breach(breach_obj)
+        except Exception as e:
+            print(f"Failed to auto-schedule breach: {e}")
+
     # Build forecast series chart payload so the Recharts UI doesn't break
     def norm(val):
         span = r_max - r_min if r_max != r_min else 1
@@ -610,20 +639,30 @@ def risk_forecast():
 
     series = []
     for _, row in forecast.iterrows():
-        ds_val   = pd.Timestamp(row["ds"]).date()
+        ds_ts    = pd.Timestamp(row["ds"])
+        ds_val   = ds_ts.date()
+        is_future_or_current = ds_ts >= pd.Timestamp(last_date)
+        
         # Find actual y in historical if exists
         try:
+            # We must use exactly the date if the index has no time component
             y_val = fe.loc[row["ds"], "risk_raw"]
             y_norm = norm(y_val)
         except KeyError:
             y_norm = None
             
+        yhat_val = round(float(np.clip(row["yhat"] * 100, 0, 100)), 2) if is_future_or_current else None
+        yhat_lower_val = round(float(np.clip(row["yhat_lower"] * 100, 0, 100)), 2) if is_future_or_current else None
+        yhat_upper_val = round(float(np.clip(row["yhat_upper"] * 100, 0, 100)), 2) if is_future_or_current else None
+        yhat_range = [yhat_lower_val, yhat_upper_val] if is_future_or_current else None
+            
         series.append({
             "ds":          str(ds_val),
             "y":           y_norm,
-            "yhat":        norm(row["yhat"]),
-            "yhat_lower":  norm(row["yhat_lower"]),
-            "yhat_upper":  norm(row["yhat_upper"]),
+            "yhat":        yhat_val,
+            "yhat_lower":  yhat_lower_val,
+            "yhat_upper":  yhat_upper_val,
+            "yhat_range":  yhat_range,
         })
 
     return jsonify({
@@ -647,12 +686,12 @@ def risk_forecast():
         "days_to_breach": days_to_breach,
         "confidence_tier": confidence,
         "risk_score": round(current_risk_norm * 100, 2),
-        "threshold": round(norm(threshold), 2),
+        "threshold": round(float(threshold * 100), 2),
         "forecast_series": series,
         "model_meta": {
             "run_date": str(last_date.date()),
             "horizon_days": horizon,
-            "target_threshold": norm(threshold)
+            "target_threshold": round(float(threshold * 100), 2)
         }
     })
 
