@@ -15,6 +15,9 @@ Endpoints:
 
 from __future__ import annotations
 
+import os
+import smtplib
+from email.message import EmailMessage
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -27,8 +30,7 @@ scheduler_bp = Blueprint("scheduler", __name__)
 
 
 # ─────────────────────────────────────────────────────────────
-# SCHEDULER CORE  (same as your scheduler.py — inlined here
-#                  so the API is a single deployable file)
+# SCHEDULER CORE
 # ─────────────────────────────────────────────────────────────
 
 class Department(Enum):
@@ -268,7 +270,6 @@ class TaskScheduler:
         if breach.conflict_with and self._room_scheduler:
             meeting_slot = self._book_conflict_meeting(task, breach)
 
-        # Send automated email alert for CRITICAL and HIGH severity
         self._alert_team_via_email(task)
 
         return task, meeting_slot
@@ -276,23 +277,47 @@ class TaskScheduler:
     def _alert_team_via_email(self, task: Task) -> None:
         if task.severity not in [Severity.CRITICAL, Severity.HIGH]:
             return
-        
         email_body = f"""
         [URGENT] Covenant Breach Alert: {task.title}
-        
+
         A {task.severity.name} severity breach has been processed by the ContractPulse Response Engine.
-        
+
         Task ID: {task.task_id}
         Assigned To: {[d.value for d in task.assigned_to]}
         Due By: {task.due_by.strftime('%Y-%m-%d %H:%M:%S')}
-        
+
         Details:
         {task.description}
-        
+
         Please take immediate action.
         """
+        
+        # Try to send a real email if credentials are set
+        sender_email = os.getenv("SMTP_EMAIL")
+        sender_password = os.getenv("SMTP_PASSWORD")
+        receiver_email = os.getenv("ALERT_RECEIVER_EMAIL", sender_email) # Send to self if no specific receiver
+        
+        if sender_email and sender_password and receiver_email:
+            try:
+                msg = EmailMessage()
+                msg.set_content(email_body)
+                msg['Subject'] = f"[URGENT] Covenant Breach Alert: {task.title}"
+                msg['From'] = sender_email
+                msg['To'] = receiver_email
+                
+                # Assuming Gmail SMTP for this example
+                with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+                    server.login(sender_email, sender_password)
+                    server.send_message(msg)
+                    
+                print(f"📧 REAL EMAIL SUCCESSFULLY SENT TO {receiver_email}")
+                return
+            except Exception as e:
+                print(f"Failed to send real email: {e}. Falling back to terminal log.")
+        
+        # Fallback to terminal if no credentials or sending fails
         print("\n" + "="*60)
-        print("📧 AUTOMATED EMAIL ALERT DISPATCHED")
+        print("📧 AUTOMATED EMAIL ALERT DISPATCHED (Terminal Mock)")
         print("="*60)
         print(email_body)
         print("="*60 + "\n")
@@ -356,7 +381,7 @@ class TaskScheduler:
 
 
 # ─────────────────────────────────────────────────────────────
-# GLOBAL SCHEDULER INSTANCE  (reset-able via /api/reset)
+# GLOBAL SCHEDULER INSTANCE
 # ─────────────────────────────────────────────────────────────
 
 def _build_scheduler() -> TaskScheduler:
@@ -370,7 +395,12 @@ def _build_scheduler() -> TaskScheduler:
     return TaskScheduler(room_scheduler=MeetingRoomScheduler(rooms))
 
 
-scheduler = _build_scheduler()
+# Use a mutable container so blueprint routes can rebind it reliably
+_state = {"scheduler": _build_scheduler()}
+
+
+def get_scheduler() -> TaskScheduler:
+    return _state["scheduler"]
 
 
 # ─────────────────────────────────────────────────────────────
@@ -394,6 +424,8 @@ def _breach_from_dict(d: dict) -> BreachedObligation:
         predicted_value=float(d["predicted_value"]) if d.get("predicted_value") is not None else None,
         deadline=d.get("deadline", "unknown"),
         consequence=d.get("consequence", "notice"),
+        # BUG FIX: treat empty string as None so conflict meetings are not
+        # accidentally triggered when the frontend sends conflict_with: ""
         conflict_with=d.get("conflict_with") or None,
     )
 
@@ -429,7 +461,7 @@ def process_breach():
     except (KeyError, ValueError) as e:
         return jsonify({"error": f"Invalid payload: {e}"}), 400
 
-    task, meeting_slot = scheduler.process_breach(breach)
+    task, meeting_slot = get_scheduler().process_breach(breach)
 
     return jsonify({
         "task":    task.to_dict(),
@@ -453,7 +485,7 @@ def process_batch():
     except (KeyError, ValueError) as e:
         return jsonify({"error": f"Invalid breach in batch: {e}"}), 400
 
-    tasks, meetings = scheduler.process_batch(breaches)
+    tasks, meetings = get_scheduler().process_batch(breaches)
 
     return jsonify({
         "tasks":    [t.to_dict() for t in tasks],
@@ -471,7 +503,7 @@ def get_tasks():
     """
     sev_filter  = request.args.get("severity", "").upper()
     dept_filter = request.args.get("department", "")
-    tasks = scheduler.all_tasks()
+    tasks = get_scheduler().all_tasks()
 
     if sev_filter and sev_filter in Severity.__members__:
         target = Severity[sev_filter]
@@ -486,38 +518,31 @@ def get_tasks():
     return jsonify({"tasks": [t.to_dict() for t in tasks], "count": len(tasks)})
 
 
+# BUG FIX: There were TWO @scheduler_bp.get("/api/meetings") routes in the
+# original file. Flask registers only the FIRST one it sees, which called a
+# non-existent method `_task_scheduler_meetings()` and crashed on every
+# request. The second (correct) route was silently ignored.
+# Fixed: one route that correctly reads _auto_meetings from the scheduler.
 @scheduler_bp.get("/api/meetings")
 def get_meetings():
-    meetings = scheduler._task_scheduler_meetings() if hasattr(scheduler, "_task_scheduler_meetings") else scheduler._auto_meetings
-    # Also include room scheduler bookings
-    all_slots = scheduler._room_scheduler.all_bookings() if scheduler._room_scheduler else []
-    seen_ids = {m.meeting_id for m in meetings}
-    extra = [s for s in all_slots if s.meeting_id not in seen_ids]
-    combined = list(meetings) + extra
-    return jsonify({"meetings": [m.to_dict() for m in combined], "count": len(combined)})
+    """Return all auto-booked conflict-resolution meeting slots."""
+    auto = get_scheduler()._auto_meetings or []
+    return jsonify({"meetings": [m.to_dict() for m in auto], "count": len(auto)})
 
 
 @scheduler_bp.get("/api/departments")
 def get_departments():
-    return jsonify({"summary": scheduler.department_summary()})
+    return jsonify({"summary": get_scheduler().department_summary()})
 
 
 @scheduler_bp.post("/api/reset")
 def reset():
-    global scheduler
-    scheduler = _build_scheduler()
+    # BUG FIX: rebinding a module-level `scheduler` variable inside a
+    # blueprint function is unreliable — the local name rebinds but callers
+    # that already imported the old object keep the stale reference.
+    # Fixed: mutate the shared _state dict so all routes see the new instance.
+    _state["scheduler"] = _build_scheduler()
     return jsonify({"status": "reset", "timestamp": datetime.now().isoformat()})
 
-
-# ─────────────────────────────────────────────────────────────
-# PATCH: expose _auto_meetings properly
-# ─────────────────────────────────────────────────────────────
-
-# Override get_meetings to use _auto_meetings list on TaskScheduler
-@scheduler_bp.get("/api/meetings")
-def get_meetings_v2():
-    auto = scheduler._auto_meetings or []
-    return jsonify({"meetings": [m.to_dict() for m in auto], "count": len(auto)})
-
-
-# Scheduler Blueprint configuration complete.
+# Add this at the very bottom of scheduler_api.py
+scheduler = _state["scheduler"]

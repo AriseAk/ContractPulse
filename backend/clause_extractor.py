@@ -240,14 +240,8 @@ def score_pairs(
         -x["predicted_score"],
     ))
 # ✅ Keep only strong, reliable contradictions
-    filtered_results = [
-        r for r in results
-        if r["predicted_label"] == "contradiction"
-        and not r["uncertain"]
-        and r["predicted_score"] >= 0.75
-    ]
 
-    return filtered_results
+    return results
 
 
 # ── Step 5: Print results ─────────────────────────────────────────────────────

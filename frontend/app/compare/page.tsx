@@ -97,6 +97,8 @@ Governing Law: This agreement is governed by the laws of California.`;
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
+const displayPct = (score: number) => Math.min(Math.round(score * 100), 99);
+
 function ClauseTag({ type }: { type: string }) {
   const label = type.replace(/_/g, " ");
   return (
@@ -138,7 +140,7 @@ function ClauseCard({ clause, hasConflict }: { clause: Clause; hasConflict: bool
 
 function ConflictRow({ conflict, idx }: { conflict: Conflict; idx: number }) {
   const [open, setOpen] = useState(idx === 0);
-  const pct = Math.round(conflict.predicted_score * 100);
+  const pct = displayPct(conflict.predicted_score);
   const isConflict = conflict.predicted_label === "contradiction";
   const isUncertain = conflict.uncertain;
 
@@ -224,7 +226,7 @@ function ConflictRow({ conflict, idx }: { conflict: Conflict; idx: number }) {
                   label === "contradiction" ? "text-red-400" :
                   label === "entailment"   ? "text-green-400" : "text-yellow-400"
                 }`}>
-                  {Math.round(score * 100)}%
+                  {displayPct(score)}%
                 </p>
               </div>
             ))}
@@ -249,6 +251,8 @@ export default function AnalyzePage() {
   const [result, setResult]       = useState<AnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState<"clauses" | "conflicts">("clauses");
 
+  // Add this helper at the top of the file, near your constants
+
   const conflictTypes = new Set(result?.conflicts.map((c) => c.clause_type) ?? []);
 
   const handleAnalyze = useCallback(async () => {
@@ -261,7 +265,8 @@ export default function AnalyzePage() {
     setResult(null);
 
     try {
-      const res = await fetch("http://localhost:5000/analyze", {
+      // UPDATED: Pointing to the correct two-contract comparison endpoint
+      const res = await fetch("http://localhost:5000/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contract_a: contractA, contract_b: contractB }),

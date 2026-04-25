@@ -8,9 +8,10 @@ const NAV_LINKS = [
   { label: "Product",    href: "/product" },
   { label: "Demo",       href: "/demo" },
   { label: "Forecast",   href: "/forecast" }, 
-  { label: "Use Cases",  href: "/use-cases" },
+  // { label: "Use Cases",  href: "/use-cases" },
   { label: "Pricing",    href: "/pricing" },
   { label: "About",      href: "/about" },
+  { label: "Compare",    href: "/compare" }, 
 ];
 
 export default function Navbar() {

@@ -133,13 +133,14 @@ function ContractViewer({
           padding: 1px 3px;
           cursor: pointer;
           transition: all 0.2s;
+          color: #111827;
           ${isActive ? `box-shadow: 0 0 0 2px ${color.border}40; outline: 1px solid ${color.border};` : ''}
         "
         class="highlight-span"
       >${escapeHtml(contractText.slice(span.start, span.end))}<sup style="
           font-size: 9px;
           background: ${color.border};
-          color: #1a1008;
+          color: #ffffff;
           border-radius: 999px;
           padding: 0 4px;
           margin-left: 3px;
@@ -172,29 +173,29 @@ function ContractViewer({
   // Show message if no text available
   if (!contractText) {
     return (
-      <div className="bg-[#0f0a05] border border-white/10 rounded-2xl overflow-hidden flex flex-col h-[600px] lg:h-[calc(100vh-160px)] lg:min-h-[600px] items-center justify-center">
-        <FileText size={36} className="text-[#f9f5ef]/20 mb-4" />
-        <p className="text-[#f9f5ef]/40 text-sm text-center px-8">
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden flex flex-col h-[600px] lg:h-[calc(100vh-160px)] lg:min-h-[600px] items-center justify-center">
+        <FileText size={36} className="text-gray-300 mb-4" />
+        <p className="text-gray-500 text-sm text-center px-8">
           Contract text will appear here after analysis.<br />
-          <span className="text-[#f9f5ef]/20 text-xs">AI-recognized clauses will be highlighted in color.</span>
+          <span className="text-gray-400 text-xs">AI-recognized clauses will be highlighted in color.</span>
         </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#0f0a05] border border-white/10 rounded-2xl overflow-hidden flex flex-col h-[600px] lg:h-[calc(100vh-160px)] lg:min-h-[600px]">
+    <div className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden flex flex-col h-[600px] lg:h-[calc(100vh-160px)] lg:min-h-[600px]">
       {/* Header */}
-      <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
+      <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between shrink-0 bg-gray-50/50">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
           <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/60" />
-          <span className="text-[10px] text-[#f9f5ef]/30 ml-2 tracking-widest uppercase">Contract Document</span>
+          <span className="text-[10px] text-gray-500 ml-2 tracking-widest uppercase font-semibold">Contract Document</span>
         </div>
         <div className="flex items-center gap-2">
-          <Eye size={12} className="text-[#f9f5ef]/30" />
-          <span className="text-[10px] text-[#C0B298] font-bold tracking-widest">
+          <Eye size={12} className="text-gray-400" />
+          <span className="text-[10px] text-gray-600 font-bold tracking-widest">
             {obligations.filter(o => o.source_text).length} HIGHLIGHTS
           </span>
         </div>
@@ -202,7 +203,7 @@ function ContractViewer({
       
       {/* Highlight Legend */}
       {obligations.length > 0 && (
-        <div className="px-5 py-2.5 border-b border-white/5 flex flex-wrap gap-2 shrink-0">
+        <div className="px-5 py-2.5 border-b border-gray-100 flex flex-wrap gap-2 shrink-0 bg-white">
           {obligations.filter(o => o.source_text).map((o, idx) => {
             const color = HIGHLIGHT_COLORS[idx % HIGHLIGHT_COLORS.length];
             return (
@@ -210,9 +211,9 @@ function ContractViewer({
                 key={o.id}
                 onClick={() => onHighlightClick(o.id)}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wider uppercase transition-all ${
-                  activeId === o.id ? 'ring-1 ring-white/30 scale-105' : 'opacity-70 hover:opacity-100'
+                  activeId === o.id ? 'ring-1 ring-gray-300 scale-105' : 'opacity-80 hover:opacity-100'
                 }`}
-                style={{ background: color.bg, color: color.text, borderBottom: `2px solid ${color.border}` }}
+                style={{ background: color.bg, color: '#111827', borderBottom: `2px solid ${color.border}` }}
               >
                 <span style={{ width: 6, height: 6, borderRadius: 99, background: color.border, display: 'inline-block' }} />
                 {o.id}
@@ -225,7 +226,7 @@ function ContractViewer({
       {/* Document Body */}
       <div
         ref={viewerRef}
-        className="flex-1 overflow-y-auto px-6 py-6 text-sm text-[#f9f5ef]/75 leading-[1.85] whitespace-pre-wrap font-mono"
+        className="flex-1 overflow-y-auto px-6 py-6 text-sm text-gray-800 leading-[1.85] whitespace-pre-wrap font-mono selection:bg-blue-100 selection:text-blue-900"
         style={{ scrollBehavior: 'smooth' }}
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: highlightedHtml }}
@@ -374,7 +375,7 @@ The Borrower shall not declare or pay any dividends or make any distributions to
   return (
     <div className={cls.page}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;900&family=Inter:wght@400;500;700&display=swap');
-        .highlight-span:hover { filter: brightness(1.3); }
+        .highlight-span:hover { filter: brightness(0.95); }
       `}</style>
       <Navbar />
 
@@ -439,7 +440,7 @@ The Borrower shall not declare or pay any dividends or make any distributions to
                 </button>
               </div>
 
-              {/* Mobile Panel Switcher */}
+              {/* Mobile Panel Switcher for Row 1 */}
               <div className="lg:hidden flex gap-3 mb-6">
                 <button
                   onClick={() => setShowPanel("document")}
@@ -459,10 +460,9 @@ The Borrower shall not declare or pay any dividends or make any distributions to
                 </button>
               </div>
 
-              {/* Two-Column Layout (Sticky Left, Scrollable Right) */}
-              <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 lg:gap-10 items-start">
-
-                {/* LEFT: Contract Document Viewer (Sticky on Desktop) */}
+              {/* ROW 1: Contract Document (Left) & Extracted Obligations (Right) */}
+              <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 lg:gap-10 items-start mb-6 lg:mb-10">
+                {/* LEFT: Contract Document Viewer */}
                 <div className={`${showPanel === "document" ? "block" : "hidden"} lg:block lg:sticky lg:top-32`}>
                   <ContractViewer
                     contractText={contractText}
@@ -472,16 +472,14 @@ The Borrower shall not declare or pay any dividends or make any distributions to
                   />
                 </div>
 
-                {/* RIGHT: Obligations + Scenario + Output */}
-                <div className={`space-y-6 lg:space-y-8 ${showPanel === "obligations" ? "block" : "hidden"} lg:block`}>
-
-                  {/* Obligations List */}
-                  <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex flex-col">
+                {/* RIGHT: Obligations List */}
+                <div className={`${showPanel === "obligations" ? "block" : "hidden"} lg:block`}>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex flex-col h-[600px] lg:h-[calc(100vh-160px)] lg:min-h-[600px]">
                     <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between shrink-0">
                       <h3 className={`${cls.clash} text-sm`}>Extracted Obligations ({obligations.length})</h3>
                       <span className="text-[10px] text-[#C0B298] tracking-widest uppercase font-bold">AI Analyzed</span>
                     </div>
-                    <div className="max-h-[450px] overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto">
                       {obligations.map((o, idx) => {
                         const adj = adjustedRisk(o.risk);
                         const color = HIGHLIGHT_COLORS[idx % HIGHLIGHT_COLORS.length];
@@ -527,84 +525,83 @@ The Borrower shall not declare or pay any dividends or make any distributions to
                       })}
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  {/* SIDE-BY-SIDE GRID: Scenario & Risk */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                    
-                    {/* Scenario Sliders */}
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col">
-                      <h3 className={`${cls.clash} text-sm mb-2`}>Scenario Simulator</h3>
-                      <p className="text-[11px] text-[#f9f5ef]/40 mb-8 uppercase tracking-wide leading-relaxed">Adjust parameters to see real-time impact on breach risk</p>
-                      <div className="flex-1 flex flex-col justify-center">
-                        {[
-                          { label: "Revenue Decrease", val: revenue, set: setRevenue, color: "text-red-400" },
-                          { label: "Cost Increase",    val: cost,    set: setCost,    color: "text-amber-400" },
-                          { label: "Interest Rate Change", val: interest, set: setInterest, color: "text-orange-400" },
-                        ].map((s) => (
-                          <div key={s.label} className="mb-6 last:mb-0">
-                            <div className="flex justify-between items-center mb-3">
-                              <label className="text-sm font-semibold text-[#f9f5ef]/80">{s.label}</label>
-                              <span className={`text-sm font-bold ${s.color}`}>+{s.val}%</span>
-                            </div>
-                            <input
-                              type="range" min={0} max={30} value={s.val}
-                              onChange={(e) => s.set(Number(e.target.value))}
-                              className="w-full accent-[#C0B298] cursor-pointer"
-                            />
-                            <div className="flex justify-between text-[10px] text-[#f9f5ef]/25 mt-2">
-                              <span>0%</span><span>15%</span><span>30%</span>
-                            </div>
+              {/* ROW 2: Scenario Simulator (Left) & Risk Output (Right) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 mb-8">
+                {/* Scenario Sliders */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 lg:p-8 flex flex-col">
+                  <h3 className={`${cls.clash} text-lg mb-2`}>Scenario Simulator</h3>
+                  <p className="text-[11px] text-[#f9f5ef]/40 mb-8 uppercase tracking-wide leading-relaxed">Adjust parameters to see real-time impact on breach risk</p>
+                  <div className="flex-1 flex flex-col justify-center gap-6">
+                    {[
+                      { label: "Revenue Decrease", val: revenue, set: setRevenue, color: "text-red-400" },
+                      { label: "Cost Increase",    val: cost,    set: setCost,    color: "text-amber-400" },
+                      { label: "Interest Rate Change", val: interest, set: setInterest, color: "text-orange-400" },
+                    ].map((s) => (
+                      <div key={s.label}>
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-sm font-semibold text-[#f9f5ef]/80">{s.label}</label>
+                          <span className={`text-sm font-bold ${s.color}`}>+{s.val}%</span>
+                        </div>
+                        <input
+                          type="range" min={0} max={30} value={s.val}
+                          onChange={(e) => s.set(Number(e.target.value))}
+                          className="w-full accent-[#C0B298] cursor-pointer"
+                        />
+                        <div className="flex justify-between text-[10px] text-[#f9f5ef]/25 mt-2">
+                          <span>0%</span><span>15%</span><span>30%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Risk Output */}
+                <div className="bg-[#C0B298]/10 border border-[#C0B298]/20 rounded-2xl p-6 lg:p-8 flex flex-col">
+                  <h3 className={`${cls.clash} text-lg mb-6 text-[#C0B298]`}>Risk Output</h3>
+
+                  <div className="flex flex-col gap-6 mb-6 pb-6 border-b border-white/10">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-2">Overall Breach</p>
+                        <p className={`font-['Space_Grotesk',sans-serif] font-bold text-5xl leading-none ${overallRisk >= 70 ? "text-red-400" : overallRisk >= 40 ? "text-amber-400" : "text-emerald-400"}`}>
+                          {overallRisk}<span className="text-2xl opacity-50 ml-1">%</span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-2">Timeline</p>
+                        <p className={`font-['Space_Grotesk',sans-serif] font-bold text-xl text-[#f9f5ef]`}>{timeRange}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {drivers.length > 0 && (
+                    <div className="flex-1 flex flex-col justify-end">
+                      <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-3 flex items-center gap-2">
+                        <AlertTriangle size={14} className="text-amber-400" /> Key Risk Drivers
+                      </p>
+                      <div className="space-y-2">
+                        {drivers.map((d, i) => (
+                          <div key={i} className="flex items-start gap-3 text-xs text-[#f9f5ef]/80 bg-black/20 p-3 rounded-lg border border-white/5">
+                            <ArrowRight size={12} className="text-amber-400 mt-0.5 shrink-0" /> 
+                            <span className="leading-snug">{d}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-
-                    {/* Risk Output */}
-                    <div className="bg-[#C0B298]/10 border border-[#C0B298]/20 rounded-2xl p-6 flex flex-col">
-                      <h3 className={`${cls.clash} text-sm mb-6 text-[#C0B298]`}>Risk Output</h3>
-
-                      <div className="flex flex-col gap-6 mb-6 pb-6 border-b border-white/10">
-                        <div className="flex items-end justify-between">
-                          <div>
-                            <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-2">Overall Breach</p>
-                            <p className={`font-['Space_Grotesk',sans-serif] font-bold text-5xl leading-none ${overallRisk >= 70 ? "text-red-400" : overallRisk >= 40 ? "text-amber-400" : "text-emerald-400"}`}>
-                              {overallRisk}<span className="text-2xl opacity-50 ml-1">%</span>
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-2">Timeline</p>
-                            <p className={`font-['Space_Grotesk',sans-serif] font-bold text-xl text-[#f9f5ef]`}>{timeRange}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {drivers.length > 0 && (
-                        <div className="flex-1 flex flex-col justify-end">
-                          <p className="text-[10px] tracking-widest uppercase font-bold text-[#f9f5ef]/50 mb-3 flex items-center gap-2">
-                            <AlertTriangle size={14} className="text-amber-400" /> Key Risk Drivers
-                          </p>
-                          <div className="space-y-2">
-                            {drivers.map((d, i) => (
-                              <div key={i} className="flex items-start gap-3 text-xs text-[#f9f5ef]/80 bg-black/20 p-2.5 rounded-lg border border-white/5">
-                                <ArrowRight size={12} className="text-amber-400 mt-0.5 shrink-0" /> 
-                                <span className="leading-snug">{d}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Report Link */}
-                  <Link href="/report" className="flex items-center justify-between w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-6 hover:border-[#C0B298]/40 hover:bg-white/10 transition-all group">
-                    <span className={`${cls.clash} text-sm`}>View full covenant risk report</span>
-                    <div className="w-8 h-8 rounded-full bg-[#C0B298]/20 flex items-center justify-center group-hover:bg-[#C0B298] group-hover:text-black transition-colors">
-                      <ArrowRight size={16} className="text-[#C0B298] group-hover:text-[#1a1008] transition-colors" />
-                    </div>
-                  </Link>
+                  )}
                 </div>
               </div>
+
+              {/* Report Link */}
+              <Link href="/report" className="flex items-center justify-between w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-6 hover:border-[#C0B298]/40 hover:bg-white/10 transition-all group">
+                <span className={`${cls.clash} text-sm`}>View full covenant risk report</span>
+                <div className="w-8 h-8 rounded-full bg-[#C0B298]/20 flex items-center justify-center group-hover:bg-[#C0B298] group-hover:text-black transition-colors">
+                  <ArrowRight size={16} className="text-[#C0B298] group-hover:text-[#1a1008] transition-colors" />
+                </div>
+              </Link>
             </>
           )}
         </div>
