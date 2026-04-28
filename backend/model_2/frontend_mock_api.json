@@ -1,0 +1,198 @@
+{
+  "AAPL": {
+    "last_update_date": "2026-04-24",
+    "current_price": 270.43,
+    "risk_metrics": {
+      "current_score": 0.0748,
+      "danger_threshold": 0.7062,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "MSFT": {
+    "last_update_date": "2026-04-24",
+    "current_price": 424.05,
+    "risk_metrics": {
+      "current_score": 0.3081,
+      "danger_threshold": 0.7255,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "TSLA": {
+    "last_update_date": "2026-04-24",
+    "current_price": 377.42,
+    "risk_metrics": {
+      "current_score": 0.4767,
+      "danger_threshold": 0.6057,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "AMD": {
+    "last_update_date": "2026-04-24",
+    "current_price": 346.54,
+    "risk_metrics": {
+      "current_score": 0.0146,
+      "danger_threshold": 0.7758,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "NVDA": {
+    "last_update_date": "2026-04-24",
+    "current_price": 208.29,
+    "risk_metrics": {
+      "current_score": 0.0133,
+      "danger_threshold": 0.734,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "F": {
+    "last_update_date": "2026-04-24",
+    "current_price": 12.39,
+    "risk_metrics": {
+      "current_score": 0.1464,
+      "danger_threshold": 0.5997,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "GE": {
+    "last_update_date": "2026-04-24",
+    "current_price": 284.33,
+    "risk_metrics": {
+      "current_score": 0.344,
+      "danger_threshold": 0.6017,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "BAC": {
+    "last_update_date": "2026-04-24",
+    "current_price": 52.04,
+    "risk_metrics": {
+      "current_score": 0.0908,
+      "danger_threshold": 0.5643,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "JPM": {
+    "last_update_date": "2026-04-24",
+    "current_price": 308.52,
+    "risk_metrics": {
+      "current_score": 0.1124,
+      "danger_threshold": 0.5974,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "NFLX": {
+    "last_update_date": "2026-04-24",
+    "current_price": 92.46,
+    "risk_metrics": {
+      "current_score": 0.3682,
+      "danger_threshold": 0.7054,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "XOM": {
+    "last_update_date": "2026-04-24",
+    "current_price": 148.16,
+    "risk_metrics": {
+      "current_score": 0.3191,
+      "danger_threshold": 0.4977,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "WMT": {
+    "last_update_date": "2026-04-24",
+    "current_price": 129.79,
+    "risk_metrics": {
+      "current_score": 0.0474,
+      "danger_threshold": 0.2903,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "TGT": {
+    "last_update_date": "2026-04-24",
+    "current_price": 128.54,
+    "risk_metrics": {
+      "current_score": 0.2469,
+      "danger_threshold": 0.463,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  },
+  "IBM": {
+    "last_update_date": "2026-04-24",
+    "current_price": 230.85,
+    "risk_metrics": {
+      "current_score": 0.4,
+      "danger_threshold": 0.593,
+      "is_in_danger_zone": false
+    },
+    "forecast": {
+      "breach_predicted": false,
+      "estimated_days_to_breach": null,
+      "confidence_level": "NONE"
+    }
+  }
+}

@@ -1,8 +1,7 @@
 import os
 import sys
 
-# Add project root to path so 'src' package is found
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import io
 import pickle
 import secrets
@@ -488,7 +487,7 @@ def detect_conflicts():
 # ─── RISK FORECAST (/api/risk) ────────────────────────────────────────────────
 
 import sys as _sys
-_sys.path.insert(0, os.path.abspath(os.path.join(BASE_DIR, '../model_2')))
+_sys.path.insert(0, os.path.join(BASE_DIR, 'model_2'))
 try:
     from inference_demo import load_ticker_data, build_risk_score
 except ImportError:
@@ -508,7 +507,7 @@ def risk_forecast():
         return jsonify({"error": f"{ticker} not in model"}), 404
 
     try:
-        df = load_ticker_data(ticker.lower(), os.path.join(BASE_DIR, '../data/Stocks'))
+        df = load_ticker_data(ticker.lower(), os.path.join(BASE_DIR, 'data/Stocks'))
         fe = build_risk_score(df)
     except Exception as e:
         return jsonify({"error": f"Failed to engineer features: {e}"}), 500
@@ -631,7 +630,7 @@ def risk_forecast():
 @app.route("/api/risk/all", methods=["GET"])
 def get_all():
     import json
-    mock_path = os.path.join(BASE_DIR, '../model_2/frontend_mock_api.json')
+    mock_path = os.path.join(BASE_DIR, 'model_2/frontend_mock_api.json')
     if os.path.exists(mock_path):
         with open(mock_path) as f:
             return jsonify(json.load(f))
@@ -656,4 +655,4 @@ if __name__ == "__main__":
     # Disable watchdog reloader on Windows — causes WinError 10038 when
     # ML model directories are watched. Debug logging stays active.
     use_reloader = sys.platform != "win32" and not IS_PROD
-    app.run(debug=not IS_PROD, port=5000, use_reloader=use_reloader, threaded=True)
+    app.run(host="0.0.0.0", port=7860)
