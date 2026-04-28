@@ -32,8 +32,8 @@ import logging
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-from src.stage3_segmentation import Chunk
-from src.utils import get_device
+from all_model_code.model_1_code.stage3_segmentation import Chunk
+from all_model_code.model_1_code.utils import get_device
 
 logger = logging.getLogger(__name__)
 

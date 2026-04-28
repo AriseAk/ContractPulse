@@ -137,9 +137,9 @@ def evaluate_pipeline(
         output_path: Path to save evaluation results.
         device: 'auto' (detect GPU), 'cuda', or 'cpu'.
     """
-    from src.pipeline import ObligationPipeline, save_results
-    from src.train_qa import load_cuad_data
-    from src.utils import get_device
+    from all_model_code.model_1_code.pipeline import ObligationPipeline, save_results
+    from all_model_code.model_1_code.train_qa import load_cuad_data
+    from all_model_code.model_1_code.utils import get_device
     
     device = get_device(device)
     

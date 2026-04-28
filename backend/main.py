@@ -23,7 +23,7 @@ from flask_session import Session
 from pymongo import MongoClient
 import certifi
 from werkzeug.security import check_password_hash, generate_password_hash
-from src.pipeline import ObligationPipeline
+from all_model_code.model_1_code.pipeline import ObligationPipeline
 from scheduler_api import scheduler_bp, scheduler, BreachedObligation, ObligationType
 
 # ── clause_extractor (for two-contract comparison) ────────────────────────────
@@ -345,8 +345,8 @@ def analyze_contract():
         print("=" * 40 + "\n")
 
         try:
-            from src.stage1_ingestion import ingest
-            from src.stage2_cleaning import clean_text
+            from all_model_code.model_1_code.stage1_ingestion import ingest
+            from all_model_code.model_1_code.stage2_cleaning import clean_text
             cleaned_text = clean_text(ingest(text, "text"))
         except Exception:
             cleaned_text = text

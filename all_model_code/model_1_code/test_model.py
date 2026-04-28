@@ -1,5 +1,5 @@
 import json
-from src.pipeline import ObligationPipeline
+from all_model_code.model_1_code.pipeline import ObligationPipeline
 
 
 def run_test():

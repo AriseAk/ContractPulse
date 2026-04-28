@@ -23,7 +23,7 @@ import logging
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from src.stage6_extraction import ExtractedObligation
+from all_model_code.model_1_code.stage6_extraction import ExtractedObligation
 
 logger = logging.getLogger(__name__)
 

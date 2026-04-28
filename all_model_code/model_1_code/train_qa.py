@@ -184,7 +184,7 @@ def train(
         sys.exit(1)
     
     # ─── Resolve device ──────────────────────────────────────────────────
-    from src.utils import get_device, get_safe_train_samples
+    from all_model_code.model_1_code.utils import get_device, get_safe_train_samples
     device = get_device(device)
     logger.info(f"Training device: {device}")
     

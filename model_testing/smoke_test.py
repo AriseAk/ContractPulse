@@ -45,17 +45,17 @@ def main():
     print(f"Raw text length: {len(context)} chars")
     
     # Stage 1: Ingestion
-    from src.stage1_ingestion import ingest
+    from all_model_code.model_1_code.stage1_ingestion import ingest
     raw = ingest(context, source_type="text")
     print(f"\n✓ Stage 1 (Ingestion): {len(raw)} chars")
     
     # Stage 2: Cleaning
-    from src.stage2_cleaning import clean_text
+    from all_model_code.model_1_code.stage2_cleaning import clean_text
     cleaned = clean_text(raw)
     print(f"✓ Stage 2 (Cleaning): {len(cleaned)} chars (reduced by {len(raw)-len(cleaned)})")
     
     # Stage 3: Segmentation
-    from src.stage3_segmentation import segment_text
+    from all_model_code.model_1_code.stage3_segmentation import segment_text
     chunks = segment_text(cleaned)
     print(f"✓ Stage 3 (Segmentation): {len(chunks)} chunks")
     
@@ -75,7 +75,7 @@ def main():
     print("SMOKE TEST: Stage 4 (QA Detection) — using 2 chunks only")
     print("=" * 60)
     
-    from src.stage4_qa_detection import QAClauseDetector, OBLIGATION_QUESTIONS
+    from all_model_code.model_1_code.stage4_qa_detection import QAClauseDetector, OBLIGATION_QUESTIONS
     
     # Use only first 2 chunks to keep memory low
     test_chunks = chunks[:2]
@@ -97,7 +97,7 @@ def main():
     print("SMOKE TEST: Stage 5 (Span Filtering)")
     print("=" * 60)
     
-    from src.stage5_span_filter import filter_spans
+    from all_model_code.model_1_code.stage5_span_filter import filter_spans
     
     filtered = filter_spans(detections, min_confidence=0.01)
     print(f"✓ Stage 5 (Filtering): {len(detections)} → {len(filtered)} spans")
@@ -110,7 +110,7 @@ def main():
     print("SMOKE TEST: Stage 6 (Information Extraction)")
     print("=" * 60)
     
-    from src.stage6_extraction import extract_obligations
+    from all_model_code.model_1_code.stage6_extraction import extract_obligations
     
     obligations = extract_obligations(filtered)
     print(f"✓ Stage 6 (Extraction): {len(obligations)} obligations")
@@ -125,7 +125,7 @@ def main():
     print("SMOKE TEST: Stage 7 (Normalization & Validation)")
     print("=" * 60)
     
-    from src.stage7_normalize import normalize_and_validate
+    from all_model_code.model_1_code.stage7_normalize import normalize_and_validate
     
     results = normalize_and_validate(obligations, min_fields=1)
     print(f"✓ Stage 7 (Normalize): {len(obligations)} → {len(results)} validated")
@@ -145,7 +145,7 @@ def main():
     print("SMOKE TEST: Full Pipeline (all stages combined)")
     print("=" * 60)
     
-    from src.pipeline import ObligationPipeline
+    from all_model_code.model_1_code.pipeline import ObligationPipeline
     
     pipeline = ObligationPipeline({
         "model_name": "ckpt_obligation_fast",

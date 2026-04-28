@@ -5,7 +5,7 @@ import sys
 # Add project root to path so 'src' package is found
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.pipeline import ObligationPipeline
+from all_model_code.model_1_code.pipeline import ObligationPipeline
 
 def run_test():
     # ─── Sample contract (you can replace this later) ───

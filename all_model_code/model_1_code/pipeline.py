@@ -14,14 +14,14 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Union
 
-from src.stage1_ingestion import ingest
-from src.stage2_cleaning import clean_text
-from src.stage3_segmentation import Chunk, segment_text
-from src.stage4_qa_detection import QAClauseDetector, OBLIGATION_QUESTIONS
-from src.stage5_span_filter import filter_spans
-from src.stage6_extraction import extract_obligations
-from src.stage7_normalize import normalize_and_validate
-from src.utils import get_device
+from all_model_code.model_1_code.stage1_ingestion import ingest
+from all_model_code.model_1_code.stage2_cleaning import clean_text
+from all_model_code.model_1_code.stage3_segmentation import Chunk, segment_text
+from all_model_code.model_1_code.stage4_qa_detection import QAClauseDetector, OBLIGATION_QUESTIONS
+from all_model_code.model_1_code.stage5_span_filter import filter_spans
+from all_model_code.model_1_code.stage6_extraction import extract_obligations
+from all_model_code.model_1_code.stage7_normalize import normalize_and_validate
+from all_model_code.model_1_code.utils import get_device
 
 logger = logging.getLogger(__name__)
 

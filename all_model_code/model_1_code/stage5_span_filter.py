@@ -20,7 +20,7 @@ import logging
 import re
 from typing import List, Set
 
-from src.stage4_qa_detection import DetectedClause
+from all_model_code.model_1_code.stage4_qa_detection import DetectedClause
 
 logger = logging.getLogger(__name__)
 

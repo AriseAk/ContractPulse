@@ -29,7 +29,7 @@ from typing import Dict, List, Optional, Tuple
 
 from matplotlib import text
 
-from src.stage4_qa_detection import DetectedClause
+from all_model_code.model_1_code.stage4_qa_detection import DetectedClause
 
 logger = logging.getLogger(__name__)
 
