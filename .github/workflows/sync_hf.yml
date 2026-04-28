@@ -28,16 +28,21 @@ jobs:
             backend/ hf-space/
 
       - name: Push to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd hf-space
 
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}"
 
-          # Pull latest HF changes (this is the fix)
+          # 🔥 THIS IS THE KEY FIX
+          git remote remove origin
+          git remote add origin https://akshay1306:$HF_TOKEN@huggingface.co/spaces/akshay1306/contractpulse
+
           git pull origin main --rebase
 
           git add .
-          git commit -m "Sync backend code" || echo "No changes to commit"
+          git commit -m "Sync backend code" || echo "No changes"
 
           git push origin main
