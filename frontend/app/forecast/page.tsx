@@ -42,7 +42,11 @@ interface ForecastData {
     yhat_lower: number | null;
     yhat_upper: number | null;
   }>;
-  model_meta: { run_date: string; target_threshold: number };
+  model_meta: {
+  run_date: string;
+  target_threshold: number;
+  horizon_days?: number;
+}
 }
 
 export default function ForecastDashboard() {
