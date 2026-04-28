@@ -96,27 +96,37 @@ interface ToastState {
 }
 
 /* ─── Intersection reveal hook ─── */
-function useInView(threshold = 0.1): { ref: React.RefObject<HTMLDivElement>; inView: boolean } {
+function useInView(threshold = 0.1): {
+  ref: React.RefObject<HTMLDivElement | null>;
+  inView: boolean
+} {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
     const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { setInView(true); obs.disconnect(); }
+      if (e.isIntersecting) {
+        setInView(true);
+        obs.disconnect();
+      }
     }, { threshold });
+
     obs.observe(el);
     return () => obs.disconnect();
   }, [threshold]);
+
   return { ref, inView };
 }
 
 /* ─── Severity config ─── */
 const SEV: Record<Severity, SevConfig> = {
   CRITICAL: { color: "#ef4444", bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.35)", icon: "⚡", label: "CRITICAL" },
-  HIGH:     { color: "#f97316", bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.35)", icon: "🔥", label: "HIGH" },
-  MEDIUM:   { color: "#C0B298", bg: "rgba(192,178,152,0.12)", border: "rgba(192,178,152,0.35)", icon: "⚠", label: "MEDIUM" },
-  LOW:      { color: "#86efac", bg: "rgba(134,239,172,0.12)", border: "rgba(134,239,172,0.35)", icon: "●", label: "LOW" },
+  HIGH: { color: "#f97316", bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.35)", icon: "🔥", label: "HIGH" },
+  MEDIUM: { color: "#C0B298", bg: "rgba(192,178,152,0.12)", border: "rgba(192,178,152,0.35)", icon: "⚠", label: "MEDIUM" },
+  LOW: { color: "#86efac", bg: "rgba(134,239,172,0.12)", border: "rgba(134,239,172,0.35)", icon: "●", label: "LOW" },
 };
 
 /* ─── API base ─── */
@@ -305,14 +315,14 @@ function BreachForm({ onSubmit, loading }: BreachFormProps): React.ReactElement 
 
   type FieldType = "text" | "number";
   const fields: [string, keyof BreachFormData, FieldType, string][] = [
-    ["Contract ID",      "contract_id",      "text",   "CTR-007"],
-    ["Metric Name",      "metric_name",      "text",   "revenue"],
-    ["Threshold Value",  "threshold_value",  "number", "5000000"],
-    ["Current Value",    "current_value",    "number", "3800000"],
-    ["Predicted Value",  "predicted_value",  "number", "optional"],
-    ["Deadline",         "deadline",         "text",   "quarterly"],
-    ["Consequence",      "consequence",      "text",   "termination"],
-    ["Conflict With",    "conflict_with",    "text",   "optional"],
+    ["Contract ID", "contract_id", "text", "CTR-007"],
+    ["Metric Name", "metric_name", "text", "revenue"],
+    ["Threshold Value", "threshold_value", "number", "5000000"],
+    ["Current Value", "current_value", "number", "3800000"],
+    ["Predicted Value", "predicted_value", "number", "optional"],
+    ["Deadline", "deadline", "text", "quarterly"],
+    ["Consequence", "consequence", "text", "termination"],
+    ["Conflict With", "conflict_with", "text", "optional"],
   ];
 
   return (
