@@ -30,9 +30,12 @@ jobs:
       - name: Push to Hugging Face
         run: |
           cd hf-space
+
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}"
-          
+
           git add .
-          git commit -m "Sync backend code" || echo "No changes"
-          git push
+          git commit -m "Sync backend code" || echo "No changes to commit"
+
+          git remote set-url origin https://akshay1306:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/akshay1306/contractpulse
+          git push origin main
