@@ -425,8 +425,10 @@ export default function SchedulerPage(): React.ReactElement {
       const [tRes, mRes, dRes] = await Promise.all([
         fetch(`${API}/tasks`), fetch(`${API}/meetings`), fetch(`${API}/departments`)
       ]);
-      const [t, m, d] = await Promise.all<TasksResponse, MeetingsResponse, DepartmentsResponse>([
-        tRes.json(), mRes.json(), dRes.json()
+      const [t, m, d] = await Promise.all([
+        tRes.json() as Promise<TasksResponse>,
+        mRes.json() as Promise<MeetingsResponse>,
+        dRes.json() as Promise<DepartmentsResponse>
       ]);
       setTasks(t.tasks ?? []);
       setMeetings(m.meetings ?? []);
