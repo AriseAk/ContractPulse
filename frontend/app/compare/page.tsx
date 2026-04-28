@@ -266,7 +266,7 @@ export default function AnalyzePage() {
 
     try {
       // UPDATED: Pointing to the correct two-contract comparison endpoint
-      const res = await fetch("http://localhost:5000/api/compare", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/compare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contract_a: contractA, contract_b: contractB }),

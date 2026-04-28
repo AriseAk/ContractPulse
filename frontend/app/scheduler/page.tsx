@@ -120,7 +120,7 @@ const SEV: Record<Severity, SevConfig> = {
 };
 
 /* ─── API base ─── */
-const API = "http://localhost:5000/api";
+const API = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api`;
 
 /* ─── Mock breach forms ─── */
 const OBLIGATION_TYPES: ObligationType[] = [
