@@ -1,22 +1,27 @@
 FROM python:3.10-slim
 
+# Create non-root user — REQUIRED by HuggingFace Spaces
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
+
 WORKDIR /app
 
-# Install system dependencies (needed for pandas, prophet, etc.)
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN pip install --no-cache-dir --upgrade pip
 
-# Copy backend code
-COPY . /app
-
-# Install Python dependencies
+# Copy and install requirements first (better caching)
+COPY --chown=user requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose HF required port
+# Copy everything else including data/Stocks
+COPY --chown=user . /app
+
+# Debug line — remove after confirming files are present
+RUN ls /app/data/Stocks/ | head -5 && echo "DATA FILES OK"
+
+# HuggingFace Spaces only works on port 7860
 EXPOSE 7860
 
-# Start app
+# Start Flask directly
 CMD ["python", "main.py"]
