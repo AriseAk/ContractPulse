@@ -626,7 +626,6 @@ def risk_forecast():
         },
     })
 
-
 @app.route("/api/risk/all", methods=["GET"])
 def get_all():
     import json
@@ -636,19 +635,14 @@ def get_all():
             return jsonify(json.load(f))
     return jsonify({"error": "frontend_mock_api.json not found"}), 404
 
-
 @app.route("/api/risk/tickers", methods=["GET"])
 def risk_tickers():
     bundle = get_model("risk")
     return jsonify({"tickers": list(bundle["models"].keys())})
 
-# ─── Health check ─────────────────────────────────────────────────────────────
-
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "extractor_available": EXTRACTOR_AVAILABLE})
-
-# ─── Entry point ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     os.makedirs("session_data", exist_ok=True)
