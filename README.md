@@ -4,6 +4,8 @@
 
 ContractPulse is a full-stack Fintech SaaS platform that bridges legal departments and financial risk management using state-of-the-art AI. It parses obligations, detects cross-document conflicts, and forecasts covenant breach risk in real time.
 
+🔗 **Live Demo: [contract-pulse-delta.vercel.app](https://contract-pulse-delta.vercel.app/)**
+
 ---
 
 ## Table of Contents
@@ -26,7 +28,6 @@ ContractPulse is a full-stack Fintech SaaS platform that bridges legal departmen
   - [Model 3 — Conflict Detection (NLI DistilBERT)](#model-3--conflict-detection-nli-distilbert)
 - [Frontend Pages](#frontend-pages)
 - [Training the Models](#training-the-models)
-- [Docker Deployment](#docker-deployment)
 
 ---
 
@@ -127,7 +128,6 @@ ContractPulse/
 │   ├── clause_extractor.py           # Groq + Model 3 cross-contract pipeline
 │   ├── scheduler_api.py              # Breach response engine & meeting scheduler
 │   ├── model3.py                     # NLI model helpers
-│   ├── Dockerfile                    # Container definition
 │   ├── .env                          # Secrets (not committed)
 │   ├── ckpt_obligation_fast/         # Fine-tuned RoBERTa QA weights
 │   ├── model_2/                      # Prophet model artifacts
@@ -190,7 +190,6 @@ ContractPulse/
 | NER (extraction fallback) | spaCy `en_core_web_sm` |
 | Database | MongoDB Atlas |
 | Auth | Google OAuth 2.0 + bcrypt email/password |
-| Containerization | Docker |
 
 ### Frontend
 | Component | Technology |
@@ -202,6 +201,7 @@ ContractPulse/
 | Icons | Lucide React |
 | Auth | next-auth v5 |
 | Font | Geist (Sans + Mono) via Google Fonts |
+| Deployment | Vercel |
 
 ---
 
@@ -265,8 +265,8 @@ Stage 7: Normalize          ← snake_case normalization, operator aliasing,
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-org/contractpulse.git
-cd contractpulse
+git clone https://github.com/AriseAk/ContractPulse.git
+cd ContractPulse
 
 # 2. Install Python dependencies
 pip install -r requirements.txt
@@ -293,8 +293,8 @@ cd frontend
 npm install
 
 # Configure environment
-cp .env.local.example .env.local
-# Set NEXT_PUBLIC_API_URL=http://localhost:5000
+# Create .env.local and set:
+# NEXT_PUBLIC_API_URL=http://localhost:5000
 
 # Start development server
 npm run dev
@@ -493,30 +493,7 @@ python all_model_code/model_1_code/test_model.py
 
 ---
 
-## Docker Deployment
-
-```bash
-cd backend
-
-# Build image
-docker build -t contractpulse-backend .
-
-# Run container
-docker run -p 7860:7860 \
-  -e MONGO_URI="..." \
-  -e GROQ_API_KEY="..." \
-  -e GOOGLE_CLIENT_ID="..." \
-  -e GOOGLE_CLIENT_SECRET="..." \
-  -e GOOGLE_REDIRECT_URI="..." \
-  -e SECRET_KEY="..." \
-  -e FRONTEND_URL="https://your-frontend.com" \
-  contractpulse-backend
-```
-
-The backend exposes port `7860` for HuggingFace Spaces compatibility.
-
----
-
 <div align="center">
-  <strong>CONTRACTPULSE</strong> — Give your contracts a heartbeat.
+  <strong>CONTRACTPULSE</strong> — Give your contracts a heartbeat.<br/>
+  <a href="https://contract-pulse-delta.vercel.app/">contract-pulse-delta.vercel.app</a>
 </div>
