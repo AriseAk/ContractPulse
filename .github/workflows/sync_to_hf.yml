@@ -1,0 +1,62 @@
+name: Sync Backend to HuggingFace Space
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+jobs:
+  sync-to-hf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Install HuggingFace Hub CLI
+        run: pip install -U "huggingface_hub[cli]"
+
+      - name: Clone HuggingFace Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global credential.helper store
+          echo "https://user:$HF_TOKEN@huggingface.co" > ~/.git-credentials
+          git clone https://huggingface.co/spaces/${{ secrets.HF_USERNAME }}/contractpulse hf_space
+          echo "HuggingFace Space cloned successfully"
+          echo "Files currently in HF Space:"
+          ls -la hf_space/
+
+      - name: Sync backend files to HF Space
+        run: |
+          rsync -av \
+            --exclude='.git/' \
+            --exclude='ckpt_obligation_fast/' \
+            --exclude='__pycache__/' \
+            --exclude='data/' \
+            --exclude='model_3/' \
+            --exclude='risk_model_v10_extended.pkl' \
+            --exclude='.env' \
+            --exclude='*.pyc' \
+            --exclude='session_data/' \
+            backend/ hf_space/
+          echo "Sync complete. Current HF Space files:"
+          ls -la hf_space/
+
+      - name: Push to HuggingFace Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd hf_space
+          git config user.email "github-actions@github.com"
+          git config user.name  "GitHub Actions"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit — HF Space is already up to date"
+          else
+            git commit -m "sync: ${{ github.event.head_commit.message }} (${{ github.sha }})"
+            git push https://user:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/${{ secrets.HF_USERNAME }}/contractpulse main
+            echo "Successfully pushed to HuggingFace Space"
+          fi
